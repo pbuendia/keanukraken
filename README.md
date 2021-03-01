@@ -1,7 +1,5 @@
 # keanukraken
-A tool for viewing the contents of metagenomic samples from a Kraken2 report file
-
-<img src="https://github.com/IGBB/keanu/blob/master/logo.png" alt="Keanu Logo" width="200" height="200">
+A tool for viewing the contents of metagenomic samples from a Kraken2 report file. See Keanu for Blast here: https://github.com/IGBB/keanu
 
 ## Files in this repository
 * format_input.py: takes a file that contains a single BLAST query and taxon ID per line and formats it correctly as input for Keanu
