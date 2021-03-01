@@ -25,7 +25,7 @@ The following command is used to create the `taxonomy.dat` and `merged_deleted.d
 
 `python3 make_db.py -names names.dmp -nodes nodes.dmp -out_db taxonomy.dat -deleted delnodes.dmp -merged merged.dmp -out_md_db merged_deleted.dat`
 
-#### Running Keanu
+#### Running Keanu for Kraken
 The following commands are used to create the interactive visualizations based on the input dataset. The first command produces a [bilevel partition graph](http://bl.ocks.org/vpletzke/raw/c5716da6a021005e7167a9504c6849b2/) and the second produces a [collapsible tree](http://bl.ocks.org/mbostock/raw/4339083/).
 
 KeanuKraken has 2 input formats which are specified with the flag:
