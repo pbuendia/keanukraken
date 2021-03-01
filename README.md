@@ -29,14 +29,19 @@ The following command is used to create the `taxonomy.dat` and `merged_deleted.d
 The following commands are used to create the interactive visualizations based on the input dataset. The first command produces a [bilevel partition graph](http://bl.ocks.org/vpletzke/raw/c5716da6a021005e7167a9504c6849b2/) and the second produces a [collapsible tree](http://bl.ocks.org/mbostock/raw/4339083/).
 
 KeanuKraken has 2 input formats which are specified with the flag:
+
 `-in_format {kraken,blast}, --input_format {kraken,blast}`
+
 with 2 choices to run with a kraken-report or Blast file. For the Blast option, see https://github.com/IGBB/keanu 
 
 Kraken format requires the column numbers for the taxon count and the taxon id. Example for kraken report with report-minimizer-data columns: -col_taxid 7 -col_ct 3.
 
 To provide a kraken_report as input and create a bilevel graph:
+
 `python keanu.py -db taxonomy.dat -md_db merged_deleted.dat -in example/kraken-report -view bilevel -out example/microbiome_bilevel.html --input_format kraken -col_taxid 7 -col_ct 3`
+
 To provide a kraken_report as input and create a taxonomy tree:
+
 `python keanu.py -db taxonomy.dat -md_db merged_deleted.dat -in example/kraken-report -view tree -out example/microbiome_tree.html --input_format kraken -col_taxid 7 -col_ct 3`
 
 
