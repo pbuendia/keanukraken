@@ -44,6 +44,9 @@ To provide a kraken_report as input and create a taxonomy tree:
 
 `python keanu.py -db taxonomy.dat -md_db merged_deleted.dat -in example/kraken-report -view tree -out example/microbiome_tree.html --input_format kraken -col_taxid 7 -col_ct 3`
 
+For a combined graph
+`python keanu.py -db taxonomy.dat -md_db merged_deleted.dat -in example/kraken-report -view combine -out example/microbiome_combined.html --input_format kraken -col_taxid 7 -col_ct 3
+
 
 ## Citation
 
