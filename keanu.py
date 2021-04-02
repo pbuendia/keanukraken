@@ -1,20 +1,38 @@
 import sys
-import itertools
+
+# import itertools
 import argparse
 from collections import Counter
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-db", "--database", help="Formatted taxonomy database")
-parser.add_argument("-md_db", "--merged_deleted_database", help="Merged/deleted taxonomy database")
-parser.add_argument("-view", "--view", choices=["tree", "bilevel"], help="View choice")
+parser.add_argument(
+    "-md_db", "--merged_deleted_database", help="Merged/deleted taxonomy database"
+)
+parser.add_argument(
+    "-view", "--view", choices=["tree", "bilevel", "combine"], help="View choice"
+)
 parser.add_argument("-in", "--input", help="Input data set")
-parser.add_argument("-in_format", "--input_format", choices=["kraken", "blast"], help="Format type of input data set.")
+parser.add_argument(
+    "-in_format",
+    "--input_format",
+    choices=["kraken", "blast"],
+    help="Format type of input data set.",
+)
 parser.add_argument("-out", "--output", help="Output HTML filename")
-parser.add_argument("-export", "--export", help="Export node/contig assignments to user-specified file")
-parser.add_argument("-ts", "--to_species", action='store_true',
-                    help="Assign ambiguous hits without attempting to find deepest common classification")
+parser.add_argument(
+    "-export", "--export", help="Export node/contig assignments to user-specified file"
+)
+parser.add_argument(
+    "-ts",
+    "--to_species",
+    action="store_true",
+    help="Assign ambiguous hits without attempting to find deepest common classification",
+)
 parser.add_argument("-col_ct", "--coltaxoncount", help="kraken column with taxon count")
-parser.add_argument("-col_taxid", "--coltaxonid", help="kraken column with taxon identifier")                    
+parser.add_argument(
+    "-col_taxid", "--coltaxonid", help="kraken column with taxon identifier"
+)
 
 if len(sys.argv) == 1:
     parser.print_help(sys.stderr)
@@ -22,27 +40,27 @@ if len(sys.argv) == 1:
 
 args = parser.parse_args()
 
-#Check kraken arguments
+# Check kraken arguments
 if args.input_format == "kraken":
     if args.coltaxoncount is None or args.coltaxonid is None:
         sys.stderr.write(
-            "Usage: kraken format requires the column numbers for the taxon count and the taxon id! (Example for kraken report with report-minimizer-data columns: -col_taxid 7 -col_ct 3)\n")
+            "Usage: kraken format requires the column numbers for the taxon count and the taxon id! (Example for kraken report with report-minimizer-data columns: -col_taxid 7 -col_ct 3)\n"
+        )
         parser.print_help(sys.stderr)
         sys.exit(1)
 
 # HTML selection:
 if args.view == "tree":
-    before_html = '<!DOCTYPE html><!-- saved from url=(0040)http://bl.ocks.org/mbostock/raw/4339083/ --><html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta charset="utf-8"><meta charset="UTF-8"><meta content="utf-8" http-equiv="encoding"><style>.node {  cursor: pointer;}.node circle {  fill: #fff;  stroke: steelblue;  stroke-width: 1.5px;}.node text {  font: 10px sans-serif;}.link {  fill: none;  stroke: #ccc;  stroke-width: 1.5px;}</style><title></title></head><body><script src="https://d3js.org/d3.v3.min.js"></script><script>var margin = {top: 20, right: 120, bottom: 20, left: 120},    width = 1920 - margin.right - margin.left,    height = 1080 - margin.top - margin.bottom;var i = 0,    duration = 750,    root;var tree = d3.layout.tree()    .size([height, width]);var diagonal = d3.svg.diagonal()    .projection(function(d) { return [d.y, d.x]; });var svg = d3.select("body").append("svg")    .attr("width", width + margin.right + margin.left)    .attr("height", height + margin.top + margin.bottom)  .append("g")    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");root=JSON.parse(\''
-    after_html = '\');  root.x0 = height / 2;  root.y0 = 0;  var max = root.size; function collapse(d) {    if (d.children) {      d._children = d.children;      d._children.forEach(collapse);      d.children = null;    }  }  root.children.forEach(collapse);  update(root);d3.select(self.frameElement).style("height", "800px");function update(source) {  var nodes = tree.nodes(root).reverse(),      links = tree.links(nodes);  nodes.forEach(function(d) { d.y = d.depth *180 });  var node = svg.selectAll("g.node")      .data(nodes, function(d) { return d.id || (d.id = ++i); });  var nodeEnter = node.enter().append("g")      .attr("class", "node")      .attr("transform", function(d) { return "translate(" + source.y0+ "," + source.x0 + ")"; })      .on("click", click);  nodeEnter.append("circle")      .attr("r", 1e-6)      .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });  nodeEnter.append("text")      .attr("x", function(d) { return d.children || d._children ? -10 - (d.size / max * 10) : 10 + (d.size / max * 10)})      .attr("dy", ".35em")      .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })      .text(function(d) { return d.name; })      .style("fill-opacity", 1e-6);  var nodeUpdate = node.transition()      .duration(duration)      .attr("transform", function(d) { return "translate(" +d.y + "," + d.x + ")"; });  nodeUpdate.select("circle")      .attr("r", function(d) { return d.size / max * 10; })      .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });  nodeUpdate.select("text")      .style("fill-opacity", 1);  var nodeExit = node.exit().transition()      .duration(duration)      .attr("transform", function(d) { return "translate(" + source.y + "," + source.x + ")"; })      .remove();  nodeExit.select("circle")      .attr("r", 1e-6);  nodeExit.select("text")      .style("fill-opacity", 1e-6);  var link = svg.selectAll("path.link")      .data(links, function(d) { return d.target.id; });  link.enter().insert("path", "g")      .attr("class", "link")      .attr("d", function(d) {        var o = {x: source.x0, y: source.y0};        return diagonal({source: o, target: o});      });  link.transition()      .duration(duration)      .attr("d", diagonal);  link.exit().transition()      .duration(duration)      .attr("d", function(d) {        var o = {x: source.x, y: source.y};        return diagonal({source: o, target: o});      })      .remove();  nodes.forEach(function(d) {    d.x0 = d.x;    d.y0 = d.y;  });}function click(d) {  if (d.children) {    d._children = d.children;    d.children = null;  } else {    d.children = d._children;    d._children = null;  }  update(d);}</script></body></html>'
+    html = '<!DOCTYPE html><!-- saved from url=(0040)http://bl.ocks.org/mbostock/raw/4339083/ --><html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta charset="utf-8"><meta charset="UTF-8"><meta content="utf-8" http-equiv="encoding"><style>.node {  cursor: pointer;}.node circle {  fill: #fff;  stroke: steelblue;  stroke-width: 1.5px;}.node text {  font: 10px sans-serif;}.link {  fill: none;  stroke: #ccc;  stroke-width: 1.5px;}</style><title></title></head><body><script src="https://d3js.org/d3.v3.min.js"></script><script>var margin = {top: 20, right: 120, bottom: 20, left: 120},    width = 1920 - margin.right - margin.left,    height = 1080 - margin.top - margin.bottom;var i = 0,    duration = 750,    root;var tree = d3.layout.tree()    .size([height, width]);var diagonal = d3.svg.diagonal()    .projection(function(d) { return [d.y, d.x]; });var svg = d3.select("body").append("svg")    .attr("width", width + margin.right + margin.left)    .attr("height", height + margin.top + margin.bottom)  .append("g")    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");root=JSON.parse(\'$$$\');  root.x0 = height / 2;  root.y0 = 0;  var max = root.size; function collapse(d) {    if (d.children) {      d._children = d.children;      d._children.forEach(collapse);      d.children = null;    }  }  root.children.forEach(collapse);  update(root);d3.select(self.frameElement).style("height", "800px");function update(source) {  var nodes = tree.nodes(root).reverse(),      links = tree.links(nodes);  nodes.forEach(function(d) { d.y = d.depth *180 });  var node = svg.selectAll("g.node")      .data(nodes, function(d) { return d.id || (d.id = ++i); });  var nodeEnter = node.enter().append("g")      .attr("class", "node")      .attr("transform", function(d) { return "translate(" + source.y0+ "," + source.x0 + ")"; })      .on("click", click);  nodeEnter.append("circle")      .attr("r", 1e-6)      .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });  nodeEnter.append("text")      .attr("x", function(d) { return d.children || d._children ? -10 - (d.size / max * 10) : 10 + (d.size / max * 10)})      .attr("dy", ".35em")      .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })      .text(function(d) { return d.name; })      .style("fill-opacity", 1e-6);  var nodeUpdate = node.transition()      .duration(duration)      .attr("transform", function(d) { return "translate(" +d.y + "," + d.x + ")"; });  nodeUpdate.select("circle")      .attr("r", function(d) { return d.size / max * 10; })      .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });  nodeUpdate.select("text")      .style("fill-opacity", 1);  var nodeExit = node.exit().transition()      .duration(duration)      .attr("transform", function(d) { return "translate(" + source.y + "," + source.x + ")"; })      .remove();  nodeExit.select("circle")      .attr("r", 1e-6);  nodeExit.select("text")      .style("fill-opacity", 1e-6);  var link = svg.selectAll("path.link")      .data(links, function(d) { return d.target.id; });  link.enter().insert("path", "g")      .attr("class", "link")      .attr("d", function(d) {        var o = {x: source.x0, y: source.y0};        return diagonal({source: o, target: o});      });  link.transition()      .duration(duration)      .attr("d", diagonal);  link.exit().transition()      .duration(duration)      .attr("d", function(d) {        var o = {x: source.x, y: source.y};        return diagonal({source: o, target: o});      })      .remove();  nodes.forEach(function(d) {    d.x0 = d.x;    d.y0 = d.y;  });}function click(d) {  if (d.children) {    d._children = d.children;    d.children = null;  } else {    d.children = d._children;    d._children = null;  }  update(d);}</script></body></html>'
 elif args.view == "bilevel":
-    before_html = '<!DOCTYPE html><!-- saved from url=http://bl.ocks.org/vpletzke/raw/c5716da6a021005e7167a9504c6849b2/ --><meta charset="utf-8"><style>circle,path{cursor: pointer;}circle{fill: none; pointer-events: all;}#tooltip{background-color: white; padding: 3px 5px; border: 1px solid black; text-align: center;}html{font-family: sans-serif;}</style><body><script src="http://d3js.org/d3.v3.min.js"></script><script>var margin={top: 350, right: 480, bottom: 350, left: 480}, radius=Math.min(margin.top, margin.right, margin.bottom, margin.left) - 10;function filter_min_arc_size_text(d, i){return (d.dx*d.depth*radius/3)>14};var hue=d3.scale.category20c();var luminance=d3.scale.sqrt() .domain([0, 1e6]) .clamp(true) .range([90, 20]);var svg=d3.select("body").append("svg") .attr("width", margin.left + margin.right) .attr("height", margin.top + margin.bottom) .append("g") .attr("transform", "translate(" + margin.left + "," + margin.top + ")");var partition=d3.layout.partition() .sort(function(a, b){return d3.ascending(a.name, b.name);}) .size([2 * Math.PI, radius]);var arc=d3.svg.arc() .startAngle(function(d){return d.x;}) .endAngle(function(d){return d.x + d.dx - .01 / (d.depth + .5);}) .innerRadius(function(d){return radius / 3 * d.depth;}) .outerRadius(function(d){return radius / 3 * (d.depth + 1) - 1;});var tooltip=d3.select("body") .append("div") .attr("id", "tooltip") .style("position", "absolute") .style("z-index", "10") .style("opacity", 0);function format_number(x){return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");}function format_description(d){var description=d.name; return /* \'<b>\' + d.name + \'</b></br>\'+*/ d.name;}function computeTextRotation(d){var angle=(d.x +d.dx/2)*180/Math.PI - 90; return angle;}function mouseOverArc(d){d3.select(this).attr("stroke","black"); tooltip.html(format_description(d)); return tooltip.transition() .duration(50) .style("opacity", 0.9);}function mouseOutArc(){d3.select(this).attr("stroke",""); return tooltip.style("opacity", 0);}function mouseMoveArc (d){return tooltip .style("top", (d3.event.pageY-10)+"px") .style("left", (d3.event.pageX+10)+"px");}var root_=null;root=JSON.parse(\''
-    after_html = '\'); partition .value(function(d){return d.size;}) .nodes(root) .forEach(function(d){d._children=d.children; d.sum=d.size; d.key=key(d); d.fill=fill(d);});partition .children(function(d, depth){return depth < 2 ? d._children : null;}) .value(function(d){return d.sum;});var center=svg.append("circle") .attr("r", radius / 3) .on("click", zoomOut);center.append("title") .text("zoom out"); var partitioned_data=partition.nodes(root).slice(1);var path=svg.selectAll("path") .data(partitioned_data) .enter().append("path") .attr("d", arc) .style("fill", function(d){return d.fill;}) .each(function(d){this._current=updateArc(d);}) .on("click", zoomIn) .on("mouseover", mouseOverArc) .on("mousemove", mouseMoveArc) .on("mouseout", mouseOutArc);var texts=svg.selectAll("text") .data(partitioned_data) .enter().append("text") .filter(filter_min_arc_size_text) .attr("x", function(d){return radius / 3 * d.depth;}) .attr("dx", "6") .attr("dy", ".35em") .attr("transform", function(d){var rotation=computeTextRotation(d); if (rotation > -180 && rotation < 180){return "rotate(" + rotation + ")";}else{return "rotate(" + (rotation ) + ")";}}) .text(function(d,i){return d.name.split("(")[0]});function zoomIn(p){if (p.depth > 1) p=p.parent; if (!p.children) return; zoom(p, p);}function zoomOut(p){if (!p.parent) return; zoom(p.parent, p);}function zoom(root, p){if (document.documentElement.__transition__) return; var enterArc, exitArc, outsideAngle=d3.scale.linear().domain([0, 2 * Math.PI]); function insideArc(d){return p.key > d.key ?{depth: d.depth - 1, x: 0, dx: 0}: p.key < d.key ?{depth: d.depth - 1, x: 2 * Math.PI, dx: 0}:{depth: 0, x: 0, dx: 2 * Math.PI};}function outsideArc(d){return{depth: d.depth + 1, x: outsideAngle(d.x), dx: outsideAngle(d.x + d.dx) - outsideAngle(d.x)};}center.datum(root); if (root===p) enterArc=outsideArc, exitArc=insideArc, outsideAngle.range([p.x, p.x + p.dx]); var new_data=partition.nodes(root).slice(1); path=path.data(new_data, function(d){return d.key;}); if (root !==p) enterArc=insideArc, exitArc=outsideArc, outsideAngle.range([p.x, p.x + p.dx]); d3.transition().duration(d3.event.altKey ? 7500 : 750).each(function(){path.exit().transition() .style("fill-opacity", function(d){return d.depth===1 + (root===p) ? 1 : 0;}) .attrTween("d", function(d){return arcTween.call(this, exitArc(d));}) .remove(); path.enter().append("path") .style("fill-opacity", function(d){return d.depth===2 - (root===p) ? 1 : 0;}) .style("fill", function(d){return d.fill;}) .on("click", zoomIn) .on("mouseover", mouseOverArc) .on("mousemove", mouseMoveArc) .on("mouseout", mouseOutArc) .each(function(d){this._current=enterArc(d);}); path.transition() .style("fill-opacity", 1) .attrTween("d", function(d){return arcTween.call(this, updateArc(d));});}); texts=texts.data(new_data, function(d){return d.key;}); texts.exit() .remove(); texts.enter() .append("text"); texts.style("opacity", 0) .attr("x", function(d){return radius / 3 * d.depth;}) .attr("dx", "6") .attr("dy", ".35em") .attr("transform", function(d){var rotation=computeTextRotation(d); if (rotation > -180 && rotation < 180){return "rotate(" + rotation + ")";}else{return "rotate(" + (rotation ) + ")";}}) .filter(filter_min_arc_size_text) .transition().delay(750).style("opacity", 1) .text(function(d,i){return d.name.split("(")[0]});};function key(d){var k=[], p=d; while (p.depth) k.push(p.name), p=p.parent; return k.reverse().join(".");}function fill(d){var p=d; while (p.depth > 1) p=p.parent; var c=d3.lab(hue(p.name+d.name)); c.l=luminance(d.sum/1000+p.sum); console.log(d.name+ " "+c); return c;}function arcTween(b){var i=d3.interpolate(this._current, b); this._current=i(0); return function(t){return arc(i(t));};}function updateArc(d){return{depth: d.depth, x: d.x, dx: d.dx};}d3.select(self.frameElement).style("height", margin.top + margin.bottom + "px");</script> '
-
+    html = '<!DOCTYPE html><!-- saved from url=http://bl.ocks.org/vpletzke/raw/c5716da6a021005e7167a9504c6849b2/ --><meta charset="utf-8"><style>circle,path{cursor: pointer;}circle{fill: none; pointer-events: all;}#tooltip{background-color: white; padding: 3px 5px; border: 1px solid black; text-align: center;}html{font-family: sans-serif;}</style><body><script src="http://d3js.org/d3.v3.min.js"></script><script>var margin={top: 350, right: 480, bottom: 350, left: 480}, radius=Math.min(margin.top, margin.right, margin.bottom, margin.left) - 10;function filter_min_arc_size_text(d, i){return (d.dx*d.depth*radius/3)>14};var hue=d3.scale.category20c();var luminance=d3.scale.sqrt() .domain([0, 1e6]) .clamp(true) .range([90, 20]);var svg=d3.select("body").append("svg") .attr("width", margin.left + margin.right) .attr("height", margin.top + margin.bottom) .append("g") .attr("transform", "translate(" + margin.left + "," + margin.top + ")");var partition=d3.layout.partition() .sort(function(a, b){return d3.ascending(a.name, b.name);}) .size([2 * Math.PI, radius]);var arc=d3.svg.arc() .startAngle(function(d){return d.x;}) .endAngle(function(d){return d.x + d.dx - .01 / (d.depth + .5);}) .innerRadius(function(d){return radius / 3 * d.depth;}) .outerRadius(function(d){return radius / 3 * (d.depth + 1) - 1;});var tooltip=d3.select("body") .append("div") .attr("id", "tooltip") .style("position", "absolute") .style("z-index", "10") .style("opacity", 0);function format_number(x){return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");}function format_description(d){var description=d.name; return /* \'<b>\' + d.name + \'</b></br>\'+*/ d.name;}function computeTextRotation(d){var angle=(d.x +d.dx/2)*180/Math.PI - 90; return angle;}function mouseOverArc(d){d3.select(this).attr("stroke","black"); tooltip.html(format_description(d)); return tooltip.transition() .duration(50) .style("opacity", 0.9);}function mouseOutArc(){d3.select(this).attr("stroke",""); return tooltip.style("opacity", 0);}function mouseMoveArc (d){return tooltip .style("top", (d3.event.pageY-10)+"px") .style("left", (d3.event.pageX+10)+"px");}var root_=null;root=JSON.parse(\'$$$\'); partition .value(function(d){return d.size;}) .nodes(root) .forEach(function(d){d._children=d.children; d.sum=d.size; d.key=key(d); d.fill=fill(d);});partition .children(function(d, depth){return depth < 2 ? d._children : null;}) .value(function(d){return d.sum;});var center=svg.append("circle") .attr("r", radius / 3) .on("click", zoomOut);center.append("title") .text("zoom out"); var partitioned_data=partition.nodes(root).slice(1);var path=svg.selectAll("path") .data(partitioned_data) .enter().append("path") .attr("d", arc) .style("fill", function(d){return d.fill;}) .each(function(d){this._current=updateArc(d);}) .on("click", zoomIn) .on("mouseover", mouseOverArc) .on("mousemove", mouseMoveArc) .on("mouseout", mouseOutArc);var texts=svg.selectAll("text") .data(partitioned_data) .enter().append("text") .filter(filter_min_arc_size_text) .attr("x", function(d){return radius / 3 * d.depth;}) .attr("dx", "6") .attr("dy", ".35em") .attr("transform", function(d){var rotation=computeTextRotation(d); if (rotation > -180 && rotation < 180){return "rotate(" + rotation + ")";}else{return "rotate(" + (rotation ) + ")";}}) .text(function(d,i){return d.name.split("(")[0]});function zoomIn(p){if (p.depth > 1) p=p.parent; if (!p.children) return; zoom(p, p);}function zoomOut(p){if (!p.parent) return; zoom(p.parent, p);}function zoom(root, p){if (document.documentElement.__transition__) return; var enterArc, exitArc, outsideAngle=d3.scale.linear().domain([0, 2 * Math.PI]); function insideArc(d){return p.key > d.key ?{depth: d.depth - 1, x: 0, dx: 0}: p.key < d.key ?{depth: d.depth - 1, x: 2 * Math.PI, dx: 0}:{depth: 0, x: 0, dx: 2 * Math.PI};}function outsideArc(d){return{depth: d.depth + 1, x: outsideAngle(d.x), dx: outsideAngle(d.x + d.dx) - outsideAngle(d.x)};}center.datum(root); if (root===p) enterArc=outsideArc, exitArc=insideArc, outsideAngle.range([p.x, p.x + p.dx]); var new_data=partition.nodes(root).slice(1); path=path.data(new_data, function(d){return d.key;}); if (root !==p) enterArc=insideArc, exitArc=outsideArc, outsideAngle.range([p.x, p.x + p.dx]); d3.transition().duration(d3.event.altKey ? 7500 : 750).each(function(){path.exit().transition() .style("fill-opacity", function(d){return d.depth===1 + (root===p) ? 1 : 0;}) .attrTween("d", function(d){return arcTween.call(this, exitArc(d));}) .remove(); path.enter().append("path") .style("fill-opacity", function(d){return d.depth===2 - (root===p) ? 1 : 0;}) .style("fill", function(d){return d.fill;}) .on("click", zoomIn) .on("mouseover", mouseOverArc) .on("mousemove", mouseMoveArc) .on("mouseout", mouseOutArc) .each(function(d){this._current=enterArc(d);}); path.transition() .style("fill-opacity", 1) .attrTween("d", function(d){return arcTween.call(this, updateArc(d));});}); texts=texts.data(new_data, function(d){return d.key;}); texts.exit() .remove(); texts.enter() .append("text"); texts.style("opacity", 0) .attr("x", function(d){return radius / 3 * d.depth;}) .attr("dx", "6") .attr("dy", ".35em") .attr("transform", function(d){var rotation=computeTextRotation(d); if (rotation > -180 && rotation < 180){return "rotate(" + rotation + ")";}else{return "rotate(" + (rotation ) + ")";}}) .filter(filter_min_arc_size_text) .transition().delay(750).style("opacity", 1) .text(function(d,i){return d.name.split("(")[0]});};function key(d){var k=[], p=d; while (p.depth) k.push(p.name), p=p.parent; return k.reverse().join(".");}function fill(d){var p=d; while (p.depth > 1) p=p.parent; var c=d3.lab(hue(p.name+d.name)); c.l=luminance(d.sum/1000+p.sum); console.log(d.name+ " "+c); return c;}function arcTween(b){var i=d3.interpolate(this._current, b); this._current=i(0); return function(t){return arc(i(t));};}function updateArc(d){return{depth: d.depth, x: d.x, dx: d.dx};}d3.select(self.frameElement).style("height", margin.top + margin.bottom + "px");</script> '
+elif args.view == "combine":
+    html = '<!DOCTYPE html><html><head><meta charset="UTF-8" /><style>circle,path,.node{cursor:pointer}circle{fill:none;pointer-events:all}#tooltip{background-color:white;padding:3px 5px;border:1px solid black;text-align:center}html{font-family:sans-serif}.node circle{fill:#fff;stroke:steelblue;stroke-width:1.5px}.node text{font:10px sans-serif}.link{fill:none;stroke:#ccc;stroke-width:1.5px}h1{text-align:center}</style></head><body><div><h1>Microbiome Tree</h1><div class="tree"></div></div><hr /><div><h1>Microbiome Donut Chart</h1><div class="bilevel"></div></div> <script src="http://d3js.org/d3.v3.min.js"></script> <script>var margin={top:350,right:480,bottom:350,left:480},radius=Math.min(margin.top,margin.right,margin.bottom,margin.left)-10;function filter_min_arc_size_text(d,i){return(d.dx*d.depth*radius)/3>14;}var hue=d3.scale.category20c();var luminance=d3.scale.sqrt().domain([0,1e6]).clamp(true).range([90,20]);var svg=d3.select(".bilevel").append("svg").attr("width",margin.left+margin.right).attr("height",margin.top+margin.bottom).append("g").attr("transform","translate("+margin.left+","+margin.top+")");var partition=d3.layout.partition().sort(function(a,b){return d3.ascending(a.name,b.name);}).size([2*Math.PI,radius]);var arc=d3.svg.arc().startAngle(function(d){return d.x;}).endAngle(function(d){return d.x+d.dx-0.01/(d.depth+0.5);}).innerRadius(function(d){return(radius/3)*d.depth;}).outerRadius(function(d){return(radius/3)*(d.depth+1)-1;});var tooltip=d3.select(".bilevel").append("div").attr("id","tooltip").style("position","absolute").style("z-index","10").style("opacity",0);function format_number(x){return x.toString().replace(/B(?=(d{3})+(?!d))/g,",");}function format_description(d){var description=d.name;return d.name;}function computeTextRotation(d){var angle=((d.x+d.dx/2)*180)/Math.PI-90;return angle;}function mouseOverArc(d){d3.select(this).attr("stroke","black");tooltip.html(format_description(d));return tooltip.transition().duration(50).style("opacity",0.9);}function mouseOutArc(){d3.select(this).attr("stroke","");return tooltip.style("opacity",0);}function mouseMoveArc(d){return tooltip.style("top",d3.event.pageY-10+"px").style("left",d3.event.pageX+10+"px");}var root_=null;root=JSON.parse(\'$$$\');partition.value(function(d){return d.size;}).nodes(root).forEach(function(d){d._children=d.children;d.sum=d.size;d.key=key(d);d.fill=fill(d);});partition.children(function(d,depth){return depth<2?d._children:null;}).value(function(d){return d.sum;});var center=svg.append("circle").attr("r",radius/3).on("click",zoomOut);center.append("title").text("zoom out");var partitioned_data=partition.nodes(root).slice(1);var path=svg.selectAll("path").data(partitioned_data).enter().append("path").attr("d",arc).style("fill",function(d){return d.fill;}).each(function(d){this._current=updateArc(d);}).on("click",zoomIn).on("mouseover",mouseOverArc).on("mousemove",mouseMoveArc).on("mouseout",mouseOutArc);var texts=svg.selectAll("text").data(partitioned_data).enter().append("text").filter(filter_min_arc_size_text).attr("x",function(d){return(radius/3)*d.depth;}).attr("dx","6").attr("dy",".35em").attr("transform",function(d){var rotation=computeTextRotation(d);if(rotation>-180&&rotation<180){return"rotate("+rotation+")";}else{return"rotate("+rotation+")";}}).text(function(d,i){return d.name.split("(")[0];});function callTree(d_depth,iname,name){if(d_depth>2){d_depth=1;}var nodes=tree.nodes(tree_root).reverse(),links=tree.links(nodes);nodes.forEach(function(d){d.y=d.depth*180;});for(var i=0;i<d_depth;i++){for(var item of nodes){if(name==item.name){data=item;}}click(data);d_depth-=1;callTree(d_depth,iname,iname);}}function zoomIn(p){var depth=p.depth;var initial_name=p.name;if(p.depth>1)p=p.parent;if(!p.children)return;console.log("zoomIn P object",p);zoom(p,p);if(d3.event.target===this){callTree(depth,initial_name,p.name);}}function zoomOut(p){if(!p.parent)return;zoom(p.parent,p);if(d3.event.target===this){var nodes=tree.nodes(tree_root).reverse();nodes.forEach(function(d){d.y=d.depth*180;});var data=nodes;for(var item of nodes){if(p.name==item.name){data=item;}}click(data);}}function zoom(root,p){if(document.documentElement.__transition__)return;var enterArc,exitArc,outsideAngle=d3.scale.linear().domain([0,2*Math.PI]);function insideArc(d){return p.key>d.key?{depth:d.depth-1,x:0,dx:0}:p.key<d.key?{depth:d.depth-1,x:2*Math.PI,dx:0}:{depth:0,x:0,dx:2*Math.PI};}function outsideArc(d){return{depth:d.depth+1,x:outsideAngle(d.x),dx:outsideAngle(d.x+d.dx)-outsideAngle(d.x),};}center.datum(root);if(root===p)(enterArc=outsideArc),(exitArc=insideArc),outsideAngle.range([p.x,p.x+p.dx]);var new_data=partition.nodes(root).slice(1);path=path.data(new_data,function(d){return d.key;});if(root!==p)(enterArc=insideArc),(exitArc=outsideArc),outsideAngle.range([p.x,p.x+p.dx]);d3.transition().duration(d3.event.altKey?7500:750).each(function(){path.exit().transition().style("fill-opacity",function(d){return d.depth===1+(root===p)?1:0;}).attrTween("d",function(d){return arcTween.call(this,exitArc(d));}).remove();path.enter().append("path").style("fill-opacity",function(d){return d.depth===2-(root===p)?1:0;}).style("fill",function(d){return d.fill;}).on("click",zoomIn).on("mouseover",mouseOverArc).on("mousemove",mouseMoveArc).on("mouseout",mouseOutArc).each(function(d){this._current=enterArc(d);});path.transition().style("fill-opacity",1).attrTween("d",function(d){return arcTween.call(this,updateArc(d));});});texts=texts.data(new_data,function(d){return d.key;});texts.exit().remove();texts.enter().append("text");texts.style("opacity",0).attr("x",function(d){return(radius/3)*d.depth;}).attr("dx","6").attr("dy",".35em").attr("transform",function(d){var rotation=computeTextRotation(d);if(rotation>-180&&rotation<180){return"rotate("+rotation+")";}else{return"rotate("+rotation+")";}}).filter(filter_min_arc_size_text).transition().delay(750).style("opacity",1).text(function(d,i){return d.name.split("(")[0];});}function key(d){var k=[],p=d;while(p.depth)k.push(p.name),(p=p.parent);return k.reverse().join(".");}function fill(d){var p=d;while(p.depth>1)p=p.parent;var c=d3.lab(hue(p.name+d.name));c.l=luminance(d.sum/1000+p.sum);console.log(d.name+" "+c);return c;}function arcTween(b){var i=d3.interpolate(this._current,b);this._current=i(0);return function(t){return arc(i(t));};}function updateArc(d){return{depth:d.depth,x:d.x,dx:d.dx};}d3.select(self.frameElement).style("height",margin.top+margin.bottom+"px");var t_margin={top:20,right:120,bottom:20,left:120},width=1920-t_margin.right-t_margin.left,height=1080-t_margin.top-t_margin.bottom;var i=0,duration=750,tree_root;var tree=d3.layout.tree().size([height,width]);var diagonal=d3.svg.diagonal().projection(function(d){return[d.y,d.x];});var tree_svg=d3.select(".tree").append("svg").attr("width",width+t_margin.right+t_margin.left).attr("height",height+t_margin.top+t_margin.bottom).append("g").attr("transform","translate("+t_margin.left+","+t_margin.top+")");tree_root=JSON.parse(\'$$$\');tree_root.x0=height/2;tree_root.y0=0;var max=tree_root.size;function collapse(d){if(d.children){d._children=d.children;d._children.forEach(collapse);d.children=null;}}tree_root.children.forEach(collapse);update(tree_root);d3.select(self.frameElement).style("height","800px");function update(source){var nodes=tree.nodes(tree_root).reverse(),links=tree.links(nodes);nodes.forEach(function(d){d.y=d.depth*180;});var node=tree_svg.selectAll("g.node").data(nodes,function(d){return d.id||(d.id=++i);});var nodeEnter=node.enter().append("g").attr("class","node").attr("transform",function(d){return"translate("+source.y0+","+source.x0+")";}).on("click",click);nodeEnter.append("circle").attr("r",1e-6).style("fill",function(d){return d._children?"lightsteelblue":"#fff";});nodeEnter.append("text").attr("x",function(d){return d.children||d._children?-10-(d.size/max)*10:10+(d.size/max)*10;}).attr("dy",".35em").attr("text-anchor",function(d){return d.children||d._children?"end":"start";}).text(function(d){return d.name;}).style("fill-opacity",1e-6);var nodeUpdate=node.transition().duration(duration).attr("transform",function(d){return"translate("+d.y+","+d.x+")";});nodeUpdate.select("circle").attr("r",function(d){return(d.size/max)*10;}).style("fill",function(d){return d._children?"lightsteelblue":"#fff";});nodeUpdate.select("text").style("fill-opacity",1);var nodeExit=node.exit().transition().duration(duration).attr("transform",function(d){return"translate("+source.y+","+source.x+")";}).remove();nodeExit.select("circle").attr("r",1e-6);nodeExit.select("text").style("fill-opacity",1e-6);var link=tree_svg.selectAll("path.link").data(links,function(d){return d.target.id;});link.enter().insert("path","g").attr("class","link").attr("d",function(d){var o={x:source.x0,y:source.y0};return diagonal({source:o,target:o});});link.transition().duration(duration).attr("d",diagonal);link.exit().transition().duration(duration).attr("d",function(d){var o={x:source.x,y:source.y};return diagonal({source:o,target:o});}).remove();nodes.forEach(function(d){d.x0=d.x;d.y0=d.y;});}var new_data=partition.nodes(root).slice(1);function click(d){if(d.children){d._children=d.children;d.children=null;var data;for(var item of new_data){if(d.name==item.parent.name){if(!item.parent.parent.parent){data=item.parent;new_data=partition.nodes(item.parent.parent).slice(1);}else{data=item.parent;new_data=partition.nodes(item.parent.parent).slice(1);}break;}}zoomOut(data);}else{d.children=d._children;d._children=null;var data;for(var item of new_data){if(d.name==item.name){data=item;new_data=partition.nodes(data).slice(1);break;}}zoomIn(data);}update(d);}</script> </body></html>'
 
 # Taxon class
 # Stores information about individual nodes in the graph
 class Taxon:
-    'A class for storing information about taxons'
+    "A class for storing information about taxons"
 
     def __init__(self, taxon, source, rank, name):
         self.taxon = taxon
@@ -68,13 +86,15 @@ class Taxon:
             self.descendants.remove(target)
 
     def __repr__(self):
-        return (str(self.taxon) + " (" + str(self.coverage) + ") " + str(self.descendants))
+        return (
+            str(self.taxon) + " (" + str(self.coverage) + ") " + str(self.descendants)
+        )
 
 
 # Graph class
 # Organizes the links between nodes into a tree for ascending/descending
 class Graph:
-    'A helper class for linking and searching taxonomy information'
+    "A helper class for linking and searching taxonomy information"
 
     def __init__(self):
         self.vertices = {}
@@ -101,46 +121,86 @@ class Graph:
             del self.vertices[each]
 
     def add_unassigned(self):
-        annotated_lineage = ["root", "superkingdom", "kingdom", "phylum", "class", "order", "suborder", "family",
-                             "genus", "species"]
+        annotated_lineage = [
+            "root",
+            "superkingdom",
+            "kingdom",
+            "phylum",
+            "class",
+            "order",
+            "suborder",
+            "family",
+            "genus",
+            "species",
+        ]
         added = {}
         for each in self.vertices:
             number_of_assigned = 0
-            if self.vertices[each].rank in annotated_lineage and self.vertices[each].rank != "species":
+            if (
+                self.vertices[each].rank in annotated_lineage
+                and self.vertices[each].rank != "species"
+            ):
                 for descendant in self.vertices[each].descendants:
                     number_of_assigned += self.vertices[descendant].coverage
                 number_of_unassigned = self.vertices[each].coverage - number_of_assigned
-                added[each * -1] = Taxon(each * -1, each,
-                                         annotated_lineage[annotated_lineage.index(self.vertices[each].rank) + 1],
-                                         "unassigned " + self.vertices[each].name)
+                added[each * -1] = Taxon(
+                    each * -1,
+                    each,
+                    annotated_lineage[
+                        annotated_lineage.index(self.vertices[each].rank) + 1
+                    ],
+                    "unassigned " + self.vertices[each].name,
+                )
                 added[each * -1].coverage = number_of_unassigned
                 self.vertices[each].descendants.append(each * -1)
         for each in added:
             self.vertices[each] = added[each]
 
     def recursive_depth_first_search(self, taxon, visited_taxons, json):
-        annotated_lineage = ["root", "superkingdom", "kingdom", "phylum", "class", "order", "suborder", "family",
-                             "genus", "species"]
+        annotated_lineage = [
+            "root",
+            "superkingdom",
+            "kingdom",
+            "phylum",
+            "class",
+            "order",
+            "suborder",
+            "family",
+            "genus",
+            "species",
+        ]
         vertex = self.vertices[taxon]
         visited_taxons.append(taxon)
         if vertex.coverage != 0:
             if vertex.rank in annotated_lineage or vertex.name == "root":
                 if len(vertex.descendants) != 0:
-                    json += ("{" + '"name": "{:s} ({:d})", "size": "{:d}", "children": ['.format(vertex.name,
-                                                                                                 vertex.coverage,
-                                                                                                 vertex.coverage))
+                    json += (
+                        "{"
+                        + '"name": "{:s} ({:d})", "size": "{:d}", "children": ['.format(
+                            vertex.name, vertex.coverage, vertex.coverage
+                        )
+                    )
 
                     for descendant in vertex.descendants:
                         if descendant not in visited_taxons and descendant != None:
-                            (visited_taxons, json) = self.recursive_depth_first_search(descendant, visited_taxons, json)
+                            (visited_taxons, json) = self.recursive_depth_first_search(
+                                descendant, visited_taxons, json
+                            )
                     json += "]},"
                 else:
-                    json += ("{" + '"name": "{:s} ({:d})", "size": "{:d}"'.format(vertex.name, vertex.coverage,
-                                                                                  vertex.coverage) + "},")
+                    json += (
+                        "{"
+                        + '"name": "{:s} ({:d})", "size": "{:d}"'.format(
+                            vertex.name, vertex.coverage, vertex.coverage
+                        )
+                        + "},"
+                    )
             else:
                 for descendant in vertex.descendants:
                     if descendant not in visited_taxons:
-                        (visited_taxons, json) = self.recursive_depth_first_search(descendant, visited_taxons, json)
+                        (visited_taxons, json) = self.recursive_depth_first_search(
+                            descendant, visited_taxons, json
+                        )
         return visited_taxons, json
 
 
@@ -156,7 +216,9 @@ with open(args.database) as taxa_data_file:
         rank = data[2]
         name = data[3]
         if data[4] != "[]":
-            descendants = [int(descendant[1:-1]) for descendant in data[4][1:-1].split(", ")]
+            descendants = [
+                int(descendant[1:-1]) for descendant in data[4][1:-1].split(", ")
+            ]
         else:
             descendants = []
         tree.add_vertex(taxon, source, rank, name, descendants)
@@ -177,40 +239,65 @@ assignments = {}
 if args.input_format == "kraken":
     index = 0
     with open(args.input) as kraken_report_file:
-        annotated_lineage = ["root", "superkingdom", "kingdom", "phylum", "class", "order", "suborder", "family", "genus",
-                             "species"]
+        annotated_lineage = [
+            "root",
+            "superkingdom",
+            "kingdom",
+            "phylum",
+            "class",
+            "order",
+            "suborder",
+            "family",
+            "genus",
+            "species",
+        ]
         for line in kraken_report_file:
             index += 1
             contig = index
             line_split = line.strip("\n").split("\t")
-            if len(line_split) < 6 or int(args.coltaxonid) > len(line_split) or int(args.coltaxoncount) > len(line_split):
-                sys.stderr.write("ERROR: Reading line 1 of Kraken_Report. This is not a Kraken Report or column numbers are wrong: " + line)
+            if (
+                len(line_split) < 6
+                or int(args.coltaxonid) > len(line_split)
+                or int(args.coltaxoncount) > len(line_split)
+            ):
+                sys.stderr.write(
+                    "ERROR: Reading line 1 of Kraken_Report. This is not a Kraken Report or column numbers are wrong: "
+                    + line
+                )
                 break
-            txCount=int(line_split[int(args.coltaxoncount)-1])
-            taxon = int(line_split[int(args.coltaxonid)-1])
+            txCount = int(line_split[int(args.coltaxoncount) - 1])
+            taxon = int(line_split[int(args.coltaxonid) - 1])
             if taxon > 0 and txCount > 0:
-                parent_counts= {} 
-                parent_counts[taxon]=txCount
-                tx=taxon
-                i=0
-                tx_p=tx
-                print ("taxon="+str(taxon)+", txCount="+str(txCount))
-                while tx!=1 and i<15: #i<15 insurance in case tree.vertices were not built correctly
-                    tx=tx_p
+                parent_counts = {}
+                parent_counts[taxon] = txCount
+                tx = taxon
+                i = 0
+                tx_p = tx
+                print("taxon=" + str(taxon) + ", txCount=" + str(txCount))
+                while (
+                    tx != 1 and i < 15
+                ):  # i<15 insurance in case tree.vertices were not built correctly
+                    tx = tx_p
                     if tx in merged:
                         tx = merged[tx]
-                        i+=1 
+                        i += 1
                     try:
                         tx_p = tree.vertices[tx].source
-                        parent_counts[tx_p]=txCount
+                        parent_counts[tx_p] = txCount
                     except:
                         if tx in deleted:
                             sys.stderr.write(
-                                "WARNING: Keanu has encountered a deleted taxon ID (" + str(tx) + ") in the BLAST results.\n")
+                                "WARNING: Keanu has encountered a deleted taxon ID ("
+                                + str(tx)
+                                + ") in the BLAST results.\n"
+                            )
                         else:
-                            sys.stderr.write("WARNING: Keanu has encountered a taxon ID (" + str(
-                                tx) + ") in the BLAST results that is not in the taxonomy database or merged/deleted database.\n")
-                parent_counts[1]=txCount #root
+                            sys.stderr.write(
+                                "WARNING: Keanu has encountered a taxon ID ("
+                                + str(tx)
+                                + ") in the BLAST results that is not in the taxonomy database or merged/deleted database.\n"
+                            )
+                parent_counts[1] = txCount  # root
                 sys.stderr.write(str(parent_counts) + "\n")
 
                 # print(parent_counts)
@@ -222,20 +309,31 @@ if args.input_format == "kraken":
                         try:
                             highest = sorted(parent_counts.values())[-2]
                         except IndexError as e:
-                            sys.stderr.write("WARNING: Skipping value due to low count of parents.\n")
+                            sys.stderr.write(
+                                "WARNING: Skipping value due to low count of parents.\n"
+                            )
                             continue
                         root = sorted(parent_counts.values())[-1]
                         if highest == 1 and root != 1:
                             sys.stderr.write(
-                                contig + " was assigned to root. Check your BLAST results for " + contig + ", especially e-scores.\n")
+                                contig
+                                + " was assigned to root. Check your BLAST results for "
+                                + contig
+                                + ", especially e-scores.\n"
+                            )
                             common_candidates = set()
                             taxon = tree.vertices[1]
                             tree.vertices[taxon.taxon].coverage += 1
                         else:
-                            common_candidates = [k for k, v in parent_counts.items() if v == highest]
+                            common_candidates = [
+                                k for k, v in parent_counts.items() if v == highest
+                            ]
                             for i in range(0, len(common_candidates)):
                                 each = common_candidates[i]
-                                while tree.vertices[each].rank not in annotated_lineage and tree.vertices[each].name != "root":
+                                while (
+                                    tree.vertices[each].rank not in annotated_lineage
+                                    and tree.vertices[each].name != "root"
+                                ):
                                     each = tree.vertices[each].source
                                 common_candidates[i] = each
                                 # print(common_candidates)
@@ -245,32 +343,57 @@ if args.input_format == "kraken":
                             if len(common_candidates) > 1:
                                 for each in common_candidates:
                                     try:
-                                        if annotated_lineage.index(tree.vertices[each].rank) > depth:
-                                            depth = annotated_lineage.index(tree.vertices[each].rank)
+                                        if (
+                                            annotated_lineage.index(
+                                                tree.vertices[each].rank
+                                            )
+                                            > depth
+                                        ):
+                                            depth = annotated_lineage.index(
+                                                tree.vertices[each].rank
+                                            )
                                             taxon = tree.vertices[each]
                                     except:
                                         pass
                             else:
                                 taxon = tree.vertices[common_candidates.pop()]
 
-                            while "uncultured" in taxon.name or "unidentified" in taxon.name or "synthetic" in taxon.name:
+                            while (
+                                "uncultured" in taxon.name
+                                or "unidentified" in taxon.name
+                                or "synthetic" in taxon.name
+                            ):
                                 taxon = tree.vertices[taxon.source]
 
                             while taxon.name != "root":
                                 if taxon.name not in assignments:
                                     assignments[taxon.name] = []
                                 assignments[taxon.name].append(contig)
-                                tree.vertices[taxon.taxon].coverage += int(parent_counts[taxon.taxon])
+                                tree.vertices[taxon.taxon].coverage += int(
+                                    parent_counts[taxon.taxon]
+                                )
                                 taxon = tree.vertices[taxon.source]
-                            tree.vertices[taxon.taxon].coverage += int(parent_counts[taxon.taxon])
-                    
+                            tree.vertices[taxon.taxon].coverage += int(
+                                parent_counts[taxon.taxon]
+                            )
+
             else:
                 continue
 
-else: # some blast-derived format
+else:  # some blast-derived format
     with open(args.input) as blast_taxon_coverage_file:
-        annotated_lineage = ["root", "superkingdom", "kingdom", "phylum", "class", "order", "suborder", "family", "genus",
-                             "species"]
+        annotated_lineage = [
+            "root",
+            "superkingdom",
+            "kingdom",
+            "phylum",
+            "class",
+            "order",
+            "suborder",
+            "family",
+            "genus",
+            "species",
+        ]
         for line in blast_taxon_coverage_file:
             contig = line.strip("\n").split("\t")[0]
             if "," in line.strip("\n").split("\t")[1]:
@@ -317,10 +440,16 @@ else: # some blast-derived format
                 except:
                     if each in deleted:
                         sys.stderr.write(
-                            "WARNING: Keanu has encountered a deleted taxon ID (" + str(each) + ") in the BLAST results.\n")
+                            "WARNING: Keanu has encountered a deleted taxon ID ("
+                            + str(each)
+                            + ") in the BLAST results.\n"
+                        )
                     else:
-                        sys.stderr.write("WARNING: Keanu has encountered a taxon ID (" + str(
-                            each) + ") in the BLAST results that is not in the taxonomy database or merged/deleted database.\n")
+                        sys.stderr.write(
+                            "WARNING: Keanu has encountered a taxon ID ("
+                            + str(each)
+                            + ") in the BLAST results that is not in the taxonomy database or merged/deleted database.\n"
+                        )
                 i += 1
             parent_counts = Counter(parents)
             sys.stderr.write(str(parent_counts) + "\n")
@@ -334,20 +463,31 @@ else: # some blast-derived format
                     try:
                         highest = sorted(parent_counts.values())[-2]
                     except IndexError as e:
-                        sys.stderr.write("WARNING: Skipping value due to low count of parents.\n")
+                        sys.stderr.write(
+                            "WARNING: Skipping value due to low count of parents.\n"
+                        )
                         continue
                     root = sorted(parent_counts.values())[-1]
                     if highest == 1 and root != 1:
                         sys.stderr.write(
-                            contig + " was assigned to root. Check your BLAST results for " + contig + ", especially e-scores.\n")
+                            contig
+                            + " was assigned to root. Check your BLAST results for "
+                            + contig
+                            + ", especially e-scores.\n"
+                        )
                         common_candidates = set()
                         taxon = tree.vertices[1]
                         tree.vertices[taxon.taxon].coverage += 1
                     else:
-                        common_candidates = [k for k, v in parent_counts.items() if v == highest]
+                        common_candidates = [
+                            k for k, v in parent_counts.items() if v == highest
+                        ]
                         for i in range(0, len(common_candidates)):
                             each = common_candidates[i]
-                            while tree.vertices[each].rank not in annotated_lineage and tree.vertices[each].name != "root":
+                            while (
+                                tree.vertices[each].rank not in annotated_lineage
+                                and tree.vertices[each].name != "root"
+                            ):
                                 each = tree.vertices[each].source
                             common_candidates[i] = each
                             # print(common_candidates)
@@ -357,15 +497,26 @@ else: # some blast-derived format
                         if len(common_candidates) > 1:
                             for each in common_candidates:
                                 try:
-                                    if annotated_lineage.index(tree.vertices[each].rank) > depth:
-                                        depth = annotated_lineage.index(tree.vertices[each].rank)
+                                    if (
+                                        annotated_lineage.index(
+                                            tree.vertices[each].rank
+                                        )
+                                        > depth
+                                    ):
+                                        depth = annotated_lineage.index(
+                                            tree.vertices[each].rank
+                                        )
                                         taxon = tree.vertices[each]
                                 except:
                                     pass
                         else:
                             taxon = tree.vertices[common_candidates.pop()]
 
-                        while "uncultured" in taxon.name or "unidentified" in taxon.name or "synthetic" in taxon.name:
+                        while (
+                            "uncultured" in taxon.name
+                            or "unidentified" in taxon.name
+                            or "synthetic" in taxon.name
+                        ):
                             taxon = tree.vertices[taxon.source]
 
                         while taxon.name != "root":
@@ -377,19 +528,26 @@ else: # some blast-derived format
                         tree.vertices[taxon.taxon].coverage += 1
 
 tree.add_unassigned()
-json = tree.recursive_depth_first_search(1, [], "")[1].replace("[,", "[").replace("},]", "}]").replace("'",
-                                                                                                       "\\'").replace(
-    ", \"children\": []", "").strip(",")
-if json == "{\"name\": \"root (1)\", \"size\": \"1\"}":
+json = (
+    tree.recursive_depth_first_search(1, [], "")[1]
+    .replace("[,", "[")
+    .replace("},]", "}]")
+    .replace("'", "\\'")
+    .replace(', "children": []', "")
+    .strip(",")
+)
+if json == '{"name": "root (1)", "size": "1"}':
     sys.stderr.write(
-        "No assignments could be made besides to root node, and no output will be created. Check your BLAST results, especially e-scores.\n")
+        "No assignments could be made besides to root node, and no output will be created. Check your BLAST results, especially e-scores.\n"
+    )
 else:
-    with open(args.output, 'w') as output_file:
-        output_file.write(before_html + json + after_html)
+    with open(args.output, "w") as output_file:
+        # output_file.write(before_html + json + after_html)
+        output_file.write(html.replace("$$$", json))
 
     if args.export:
         assignment_string = ""
         for each in assignments:
             assignment_string += each + "\t" + str(assignments[each]) + "\n"
-        with open(args.export, 'w') as output_file:
+        with open(args.export, "w") as output_file:
             output_file.write(assignment_string)
